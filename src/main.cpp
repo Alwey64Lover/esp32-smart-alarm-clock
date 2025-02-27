@@ -2,7 +2,7 @@
 #include "time.h"
 #include <TM1637Display.h>
 #include <Keypad.h>
-#include <unordered_set>
+#include <set>
 
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
@@ -11,6 +11,26 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 7 * 3600;
 const int   daylightOffset_sec = 0;
 
+const uint8_t SEG_ADD[] = {
+	SEG_A | SEG_B | SEG_C | SEG_E| SEG_F | SEG_G,    // A
+	SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
+	SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
+  0x00
+	},
+  SEG_DEL[] = {
+	  SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
+	  SEG_A | SEG_D | SEG_E | SEG_F | SEG_G,           // E
+    SEG_D | SEG_E | SEG_F,                           // L 
+    0x00
+  },
+  SEG_DONE[] = {
+    SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
+    SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,   // O
+    SEG_C | SEG_E | SEG_G,                           // n
+    SEG_A | SEG_D | SEG_E | SEG_F | SEG_G            // E
+    };;
+  
+
 int state = 0, valIndex = 0;
 int entered_value = 0;
 unsigned long lastPrintTime = 0;
@@ -18,7 +38,8 @@ unsigned long buzzerStartTime = 0;
 bool buzzerActive = false;
 int activeAlarm = -1; // Track the currently active alarm
 
-std::unordered_set<int> alarm_set;
+std::set<int> alarm_set;
+std::set<int>::iterator alarm_itr;
 
 const uint8_t rows = 4, cols = 4;
 char keys[rows][cols] = {
@@ -105,6 +126,9 @@ void setAlarm() {
     Serial.print(" ");
   }
   Serial.println();
+
+  display.setSegments(SEG_DONE);
+  delay(1000);
 }
 
 void turnOffAlarm() {
@@ -114,6 +138,41 @@ void turnOffAlarm() {
     digitalWrite(18, LOW); // Turn off the buzzer
     Serial.println("Alarm turned off.");
   }
+}
+
+void removeAlarm(){
+  state = 2;
+  alarm_itr = alarm_set.begin();
+}
+
+void deleteAlarm(){
+  alarm_set.erase(alarm_itr);
+  state = 0;
+  display.setSegments(SEG_DONE);
+  delay(1000);
+}
+
+void keyPadState2(){
+  char key = keypad.getKey();
+
+  switch (key){
+    case 'A':
+      deleteAlarm();
+      break;
+    case 'B':
+      state = 0;
+      break;
+    case 'C':
+      if (alarm_itr != std::prev(alarm_set.end()))
+      alarm_itr++;
+      Serial.println("moving up");
+      break;
+    case 'D':
+      if (alarm_itr != alarm_set.begin())
+      alarm_itr--;
+      Serial.println("moving down");
+      break;
+  } 
 }
 
 void keyPadState1() {
@@ -141,7 +200,14 @@ void keyPadState0() {
 
   switch (key) {
     case 'A':
+      display.setSegments(SEG_ADD);
+      delay(1000);
       enterAlarm();
+      break;
+    case 'B':
+      display.setSegments(SEG_DEL);
+      delay(1000);
+      removeAlarm();
       break;
     case 'C':
       turnOffAlarm();
@@ -156,6 +222,9 @@ void getInput() {
       break;
     case 1:
       keyPadState1();
+      break;
+    case 2:
+      keyPadState2();
       break;
   }
 }
@@ -196,8 +265,11 @@ void loop() {
         printLocalTime();
       
     }
-    else{
+    else if (state == 1){
       display.showNumberDec(entered_value / pow(10, 4 - valIndex));
+    }
+    else{
+      display.showNumberDec(*alarm_itr);
     }
   }
   getInput();
