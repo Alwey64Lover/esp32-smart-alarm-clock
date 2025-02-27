@@ -12,7 +12,7 @@ const long  gmtOffset_sec = 7 * 3600;
 const int   daylightOffset_sec = 0;
 
 int state = 0, valIndex = 0;
-int entered_value[4] = {0};
+int entered_value = 0;
 unsigned long lastPrintTime = 0;
 unsigned long buzzerStartTime = 0;
 bool buzzerActive = false;
@@ -73,10 +73,13 @@ void printLocalTime() {
 }
 
 void nextChar(char key) {
-  if (valIndex < 4) {
+  if (valIndex < 4 && 
+    !(valIndex == 2 && key - '0' > 5) && 
+    !(valIndex == 0 && key - '0' > 2) && 
+    !(valIndex == 1 && entered_value == 2000 && key - '0' > 3)) {
     Serial.print("Entered value: ");
     Serial.println(key);
-    entered_value[valIndex] = key - '0';
+    entered_value += (key - '0') * pow(10, 3 - valIndex);
     valIndex++;
   }
 }
@@ -87,18 +90,14 @@ void enterAlarm() {
 }
 
 void setAlarm() {
-  int totalTime = 0;
-  for (int i = 0; i < 4; i++) {
-    totalTime += entered_value[i] * pow(10, 3 - i);
-  }
 
-  alarm_set.insert(totalTime);
+  alarm_set.insert(entered_value);
   state = 0;
   valIndex = 0;
-  memset(entered_value, 0, sizeof(entered_value));
+  entered_value = 0;
 
   Serial.print("Alarm set: ");
-  Serial.println(totalTime);
+  Serial.println(entered_value);
 
   Serial.print("All alarms: ");
   for (int i : alarm_set) {
@@ -128,7 +127,7 @@ void keyPadState1() {
       Serial.println("Exiting alarm mode without setting.");
       state = 0;
       valIndex = 0;
-      memset(entered_value, 0, sizeof(entered_value));
+      entered_value = 0;
       break;
     default:
       if (isDigit(key)) {
@@ -190,9 +189,16 @@ void setup() {
 void loop() {
   unsigned long currentMillis = millis();
 
-  if (currentMillis - lastPrintTime >= 1000) {  // Run every 1 second
-    lastPrintTime = currentMillis;
-    printLocalTime();
+  if (currentMillis - lastPrintTime >= 1000){
+    if (state == 0){
+        // Run every 1 second
+        lastPrintTime = currentMillis;
+        printLocalTime();
+      
+    }
+    else{
+      display.showNumberDec(entered_value / pow(10, 4 - valIndex));
+    }
   }
   getInput();
 }
