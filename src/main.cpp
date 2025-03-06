@@ -11,6 +11,9 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 7 * 3600;
 const int   daylightOffset_sec = 0;
 
+const int pirPin = 19;  // Sensor PIR (motion)
+const int ldrPin = 34;  // Sensor LDR (cahaya)
+
 const uint8_t SEG_ADD[] = {
 	SEG_A | SEG_B | SEG_C | SEG_E| SEG_F | SEG_G,    // A
 	SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
@@ -37,6 +40,8 @@ unsigned long lastPrintTime = 0;
 unsigned long buzzerStartTime = 0;
 bool buzzerActive = false;
 int activeAlarm = -1; // Track the currently active alarm
+
+
 
 std::set<int> alarm_set;
 std::set<int>::iterator alarm_itr;
@@ -231,6 +236,8 @@ void getInput() {
 
 void setup() {
   pinMode(18, OUTPUT);
+  pinMode(pirPin, INPUT);  
+  pinMode(ldrPin, INPUT);  
   digitalWrite(18, LOW);
 
   Serial.begin(115200);
@@ -273,4 +280,17 @@ void loop() {
     }
   }
   getInput();
+
+  if (digitalRead(pirPin) == HIGH) {
+    Serial.println("Motion detected!");
+  }
+
+  int ldrValue = analogRead(ldrPin);
+  Serial.print("LDR Value: ");
+  Serial.println(ldrValue);
+
+  if (ldrValue < 500) {  
+    Serial.println("Low light detected!");
+  }
+  delay(500);
 }
