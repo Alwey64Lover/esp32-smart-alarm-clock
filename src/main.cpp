@@ -236,9 +236,9 @@ void getInput() {
 
 void setup() {
   pinMode(18, OUTPUT);
+  digitalWrite(18, LOW);
   pinMode(pirPin, INPUT);  
   pinMode(ldrPin, INPUT);  
-  digitalWrite(18, LOW);
 
   Serial.begin(115200);
 
@@ -286,7 +286,7 @@ void loop() {
   }
 
   int ldrValue = analogRead(ldrPin);
-  Serial.print("LDR Value: ");
+  // Serial.print("LDR Value: ");
   Serial.println(ldrValue);
 
   if (ldrValue < 500) {  
