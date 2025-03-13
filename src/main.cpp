@@ -11,6 +11,8 @@ const int   daylightOffset_sec = 0;
 
 const int pirPin = 19;  
 const int ldrPin = 34;  
+const int trigPin = 5;
+const int echoPin = 4;
   
 unsigned long lastPrintTime = 0;
 
@@ -81,7 +83,8 @@ void setup() {
   digitalWrite(18, LOW);
   pinMode(pirPin, INPUT);  
   pinMode(ldrPin, INPUT);  
-
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
   Serial.begin(115200);
 
   Serial.print("Connecting to ");
@@ -108,6 +111,25 @@ void loop() {
   unsigned long currentMillis = millis();
   // Serial.println(*myAlarm.alarm_itr);
 
+  // Ultrasonic
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Read the echo pin
+  long duration = pulseIn(echoPin, HIGH);
+
+  // Convert to distance (speed of sound = 343 m/s = 0.0343 cm/µs)
+  float distance_cm = (duration * 0.0343) / 2;
+
+  // Print the result
+  Serial.print("Distance: ");
+  Serial.print(distance_cm);
+  Serial.println(" cm");
+
+  
   if (currentMillis - lastPrintTime >= 1000){
     if (keyPadControl.state == 0){
         // Run every 1 second

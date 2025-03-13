@@ -40,7 +40,15 @@
       "top": -450,
       "left": 600,
       "attrs": {}
+    },
+    {
+      "type": "wokwi-hc-sr04",
+      "id": "ultrasonic1",
+      "top": 100,
+      "left": 600,
+      "attrs": {}
     }
+    
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
@@ -80,7 +88,11 @@
     [ "r1:2", "bb1:bn.5", "black", [] ], 
     [ "pir1:VCC", "bb1:bp.7", "red", [] ], 
     [ "pir1:GND", "bb1:bn.7", "black", [] ], 
-    [ "pir1:OUT", "esp:19", "blue", [] ]
+    [ "pir1:OUT", "esp:19", "blue", [] ],
+    [ "ultrasonic1:VCC", "bb1:bp.9", "red", [] ],
+    [ "ultrasonic1:GND", "bb1:bn.9", "black", [] ],
+    [ "ultrasonic1:TRIG", "esp:5", "green", [] ],
+    [ "ultrasonic1:ECHO", "esp:4", "blue", [] ]
 
   ],
   "dependencies": {}
