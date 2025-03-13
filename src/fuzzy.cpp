@@ -44,12 +44,12 @@ void calculateLightMembership(float luxValue) {
 }
 
 void calculateDistanceMembership(float distanceValue) {
-  distanceMembership[DISTANCE_NEAR] = max(0.0f, min(1.0f, (50.0f - distanceValue) / 50.0f));
+  distanceMembership[DISTANCE_NEAR] = max(0.0f, min(1.0f, (100.0f - distanceValue) / 98.0f));
 
-  distanceMembership[DISTANCE_MEDIUM] = max(0.0f, min(1.0f, (distanceValue - 30.0f) / 60.0f));
-  distanceMembership[DISTANCE_MEDIUM] = min(distanceMembership[DISTANCE_MEDIUM], (150.0f - distanceValue) / 60.0f);
+  distanceMembership[DISTANCE_MEDIUM] = max(0.0f, min(1.0f, (distanceValue - 50.0f) / 100.0f));
+  distanceMembership[DISTANCE_MEDIUM] = min(distanceMembership[DISTANCE_MEDIUM], (250.0f - distanceValue) / 100.0f);
 
-  distanceMembership[DISTANCE_FAR] = max(0.0f, min(1.0f, (distanceValue - 100.0f) / 100.0f));
+  distanceMembership[DISTANCE_FAR] = max(0.0f, min(1.0f, (distanceValue - 200.0f) / 200.0f));
 
   Serial.print("Distance Membership - NEAR: ");
   Serial.print(distanceMembership[DISTANCE_NEAR]);

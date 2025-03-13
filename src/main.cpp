@@ -54,7 +54,25 @@ void printLocalTime() {
   int mins = timeinfo.tm_min;
   int time = hrs * 100 + mins;
 
-  if (myAlarm.alarm_set.find(time) != myAlarm.alarm_set.end()) {
+  if (myAlarm.alarm_set.find(time) == myAlarm.alarm_set.end()) {
+    // Ultrasonic
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    // Read the echo pin
+    long duration = pulseIn(echoPin, HIGH);
+
+    // Convert to distance (speed of sound = 343 m/s = 0.0343 cm/µs)
+    float distance_cm = (duration * 0.0343) / 2;
+
+    // Print the result
+    Serial.print("Distance: ");
+    Serial.print(distance_cm);
+    Serial.println(" cm");
+
     int motionValue = digitalRead(pirPin); 
     int lightValue = analogRead(ldrPin);  
     Serial.println(lightValue);
@@ -67,6 +85,7 @@ void printLocalTime() {
     Serial.println(luxValue);
 
     calculateLightMembership(luxValue);
+    calculateDistanceMembership(distance_cm);
 
     int alarmAction = applyFuzzyRules(motionValue);
 
@@ -109,26 +128,6 @@ void setup() {
 
 void loop() {
   unsigned long currentMillis = millis();
-  // Serial.println(*myAlarm.alarm_itr);
-
-  // Ultrasonic
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  // Read the echo pin
-  long duration = pulseIn(echoPin, HIGH);
-
-  // Convert to distance (speed of sound = 343 m/s = 0.0343 cm/µs)
-  float distance_cm = (duration * 0.0343) / 2;
-
-  // Print the result
-  Serial.print("Distance: ");
-  Serial.print(distance_cm);
-  Serial.println(" cm");
-
   
   if (currentMillis - lastPrintTime >= 1000){
     if (keyPadControl.state == 0){

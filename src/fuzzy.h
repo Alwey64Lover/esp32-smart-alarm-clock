@@ -20,6 +20,7 @@
 
 float mapToLux(int analogValue);
 void calculateLightMembership(float luxValue);
+void calculateDistanceMembership(float distanceValue);
 int applyFuzzyRules(int motionValue);
 
 #endif
