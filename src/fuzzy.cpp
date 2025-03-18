@@ -29,18 +29,18 @@ float mapToLux(int analogValue) {
   return map(analogValue, 4063, 32, 0.1, 100000.0);
 }
 
-void calculateLightMembership(float luxValue) {
-  lightMembership[LIGHT_DARK] = max(0.0f, min(1.0f, (100.0f - luxValue) / 99.9f));
-  lightMembership[LIGHT_MEDIUM] = max(0.0f, min(1.0f, (luxValue - 50.0f) / 4950.0f));
-  lightMembership[LIGHT_MEDIUM] = min(lightMembership[LIGHT_MEDIUM], (10000.0f - luxValue) / 5000.0f);
-  lightMembership[LIGHT_BRIGHT] = max(0.0f, min(1.0f, (luxValue - 5000.0f) / 95000.0f));
+void calculateLightMembership(float lux) {
+  lightMembership[LIGHT_DARK] = max(0.0f, min(1.0f, (100.0f - lux) / 99.9f));
+  lightMembership[LIGHT_MEDIUM] = max(0.0f, min(1.0f, (lux - 50.0f) / 4950.0f));
+  lightMembership[LIGHT_MEDIUM] = min(lightMembership[LIGHT_MEDIUM], (10000.0f - lux) / 5000.0f);
+  lightMembership[LIGHT_BRIGHT] = max(0.0f, min(1.0f, (lux - 5000.0f) / 95000.0f));
 
-  Serial.print("Light Membership - DARK: ");
-  Serial.print(lightMembership[LIGHT_DARK]);
-  Serial.print(", MEDIUM: ");
-  Serial.print(lightMembership[LIGHT_MEDIUM]);
-  Serial.print(", BRIGHT: ");
-  Serial.println(lightMembership[LIGHT_BRIGHT]);
+  //Serial.print("Light Membership - DARK: ");
+  //Serial.print(lightMembership[LIGHT_DARK]);
+  //Serial.print(", MEDIUM: ");
+  //Serial.print(lightMembership[LIGHT_MEDIUM]);
+  //Serial.print(", BRIGHT: ");
+  //Serial.println(lightMembership[LIGHT_BRIGHT]);
 }
 
 void calculateDistanceMembership(float distanceValue) {
@@ -51,12 +51,12 @@ void calculateDistanceMembership(float distanceValue) {
 
   distanceMembership[DISTANCE_FAR] = max(0.0f, min(1.0f, (distanceValue - 200.0f) / 200.0f));
 
-  Serial.print("Distance Membership - NEAR: ");
-  Serial.print(distanceMembership[DISTANCE_NEAR]);
-  Serial.print(", MEDIUM: ");
-  Serial.print(distanceMembership[DISTANCE_MEDIUM]);
-  Serial.print(", FAR: ");
-  Serial.println(distanceMembership[DISTANCE_FAR]);
+  //Serial.print("Distance Membership - NEAR: ");
+  //Serial.print(distanceMembership[DISTANCE_NEAR]);
+  //Serial.print(", MEDIUM: ");
+  //Serial.print(distanceMembership[DISTANCE_MEDIUM]);
+  //Serial.print(", FAR: ");
+  //Serial.println(distanceMembership[DISTANCE_FAR]);
 }
 
 int applyFuzzyRules(int motionValue) {
@@ -74,12 +74,12 @@ int applyFuzzyRules(int motionValue) {
     }
   }
 
-  Serial.print("Action Strength - NO_ALARM: ");
-  Serial.print(actionStrength[NO_ALARM]);
-  Serial.print(", LOW_ALARM: ");
-  Serial.print(actionStrength[LOW_ALARM]);
-  Serial.print(", HIGH_ALARM: ");
-  Serial.println(actionStrength[HIGH_ALARM]);
+  //Serial.print("Action Strength - NO_ALARM: ");
+  //Serial.print(actionStrength[NO_ALARM]);
+  //Serial.print(", LOW_ALARM: ");
+  //Serial.print(actionStrength[LOW_ALARM]);
+  //Serial.print(", HIGH_ALARM: ");
+  //Serial.println(actionStrength[HIGH_ALARM]);
 
   float numerator = 0.0f;
   float denominator = 0.0f;
@@ -93,8 +93,8 @@ int applyFuzzyRules(int motionValue) {
 
   int action = round(numerator / denominator);
 
-  Serial.print("Final Action: ");
-  Serial.println(action);
+  //Serial.print("Final Action: ");
+  //Serial.println(action);
 
   return action;
 }

@@ -8,8 +8,8 @@ void KeyPadControl::nextChar(char key) {
       !(valIndex == 2 && key - '0' > 5) && 
       !(valIndex == 0 && key - '0' > 2) && 
       !(valIndex == 1 && entered_value == 2000 && key - '0' > 3)) {
-      Serial.print("Entered value: ");
-      Serial.println(key);
+      //Serial.print("Entered value: ");
+      //Serial.println(key);
       entered_value += (key - '0') * pow(10, 3 - valIndex);
       valIndex++;
     }
@@ -17,7 +17,7 @@ void KeyPadControl::nextChar(char key) {
 
 void KeyPadControl::enterAlarm() {
     state = 1;
-    Serial.println("Entering alarm mode. Please enter a 4-digit time (HHMM).");
+    //Serial.println("Entering alarm mode. Please enter a 4-digit time (HHMM).");
 }
   
 void KeyPadControl::turnOffAlarm() {
@@ -45,12 +45,12 @@ void KeyPadControl::removeAlarm(){
       case 'C':
         if (alarm.alarm_itr != std::prev(alarm.alarm_set.end()))
         alarm.alarm_itr++;
-        Serial.println("moving up");
+        //Serial.println("moving up");
         break;
       case 'D':
         if (alarm.alarm_itr != alarm.alarm_set.begin())
         alarm.alarm_itr--;
-        Serial.println("moving down");
+        //Serial.println("moving down");
         break;
     } 
   }
@@ -68,7 +68,7 @@ void KeyPadControl::removeAlarm(){
             delay(1000);
             break;
         case 'B':
-            Serial.println("Exiting alarm mode without setting.");
+            //Serial.println("Exiting alarm mode without setting.");
             state = 0;
             valIndex = 0;
             entered_value = 0;

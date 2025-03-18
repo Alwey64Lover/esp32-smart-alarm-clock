@@ -1,6 +1,15 @@
+#define BLYNK_TEMPLATE_ID "TMPL6s4XFdGDN"
+#define BLYNK_TEMPLATE_NAME "Smart Alarm Clock"
+#define BLYNK_AUTH_TOKEN "VpIqj7ONxoZoO1ItZ5xY8Q6prIEDzj-c"
+
 #include "config.h"
 #include "MyAlarm.h"
 #include "KeyPadControl.h"
+#include <BlynkSimpleEsp32.h>
+
+#define VIRTUAL_PIN_0 V0
+#define VIRTUAL_PIN_1 V1
+#define VIRTUAL_PIN_2 V2
 
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
@@ -13,6 +22,9 @@ const int pirPin = 19;
 const int ldrPin = 34;  
 const int trigPin = 5;
 const int echoPin = 4;
+
+const float GAMMA = 1.2;
+const float RL10 = 20;
   
 unsigned long lastPrintTime = 0;
 
@@ -39,14 +51,14 @@ KeyPadControl keyPadControl(keypad, display, myAlarm);
 //   digitalWrite(18, HIGH);  
 //   delay(500);
 //   digitalWrite(18, LOW);
-//   Serial.println("server connection");
+//   //Serial.println("server connection");
 //   server.send(200, "text/html", "Alarm Triggered");
 // }
 
 void printLocalTime() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
+    //Serial.println("Failed to obtain time");
     return;
   }
 
@@ -68,23 +80,36 @@ void printLocalTime() {
     // Convert to distance (speed of sound = 343 m/s = 0.0343 cm/µs)
     float distance_cm = (duration * 0.0343) / 2;
 
+    Blynk.virtualWrite(VIRTUAL_PIN_2,  distance_cm);
+
     // Print the result
-    Serial.print("Distance: ");
-    Serial.print(distance_cm);
-    Serial.println(" cm");
+    //Serial.print("Distance: ");
+    //Serial.print(distance_cm);
+    //Serial.println(" cm");
 
     int motionValue = digitalRead(pirPin); 
     int lightValue = analogRead(ldrPin);  
+    
+    float voltage = float(lightValue) / 1024.0 * 5.0;
+    float resistance = 2000.0 * voltage / (1.0 - voltage / 5.0);
+    float lux = pow(RL10 * 1e3 * pow(10.0, GAMMA) / resistance, (1.0 / GAMMA));
+
+    if(!isfinite(lux)) lux = -1;
+
+    Serial.print("analog: ");
     Serial.println(lightValue);
+    Serial.print("lux: ");
+    Serial.println(lux);
 
-    float luxValue = mapToLux(lightValue);
+    Blynk.virtualWrite(VIRTUAL_PIN_0,  motionValue);
+    Blynk.virtualWrite(VIRTUAL_PIN_1,  lux);
 
-    Serial.print("Motion: ");
-    Serial.print(motionValue);
-    Serial.print(", Light (lux): ");
-    Serial.println(luxValue);
+    //Serial.print("Motion: ");
+    //Serial.print(motionValue);
+    //Serial.print(", Light (lux): ");
+    //Serial.println(luxValue);
 
-    calculateLightMembership(luxValue);
+    calculateLightMembership(lux);
     calculateDistanceMembership(distance_cm);
 
     int alarmAction = applyFuzzyRules(motionValue);
@@ -106,24 +131,21 @@ void setup() {
   pinMode(echoPin, INPUT);
   Serial.begin(115200);
 
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  //Serial.print("Connecting to ");
+  //Serial.println(ssid);
   WiFi.begin(ssid, password, 6);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    //Serial.print(".");
   }
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println(WiFi.localIP());
+  //Serial.println("");
+  //Serial.println("WiFi connected.");
+  //Serial.println(WiFi.localIP());
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   printLocalTime();
 
-  // server.on("/trigger_alarm", handleAlarmTrigger);
-  // server.begin();
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_OFF);
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);
 }
 
 void loop() {
@@ -145,5 +167,6 @@ void loop() {
   }
   keyPadControl.getInput();
 
+  Blynk.run();
   delay(200);
 }
