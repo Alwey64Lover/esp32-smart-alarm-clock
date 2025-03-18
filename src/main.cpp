@@ -1,10 +1,7 @@
-#define BLYNK_TEMPLATE_ID "TMPL6s4XFdGDN"
-#define BLYNK_TEMPLATE_NAME "Smart Alarm Clock"
-#define BLYNK_AUTH_TOKEN "VpIqj7ONxoZoO1ItZ5xY8Q6prIEDzj-c"
-
 #include "config.h"
 #include "MyAlarm.h"
 #include "KeyPadControl.h"
+#include "blynkCreds.h"
 #include <BlynkSimpleEsp32.h>
 
 #define VIRTUAL_PIN_0 V0
