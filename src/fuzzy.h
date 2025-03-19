@@ -18,6 +18,9 @@
 #define LOW_ALARM 1
 #define HIGH_ALARM 2
 
+extern float lightMembership[FUZZY_SETS];
+extern float distanceMembership[FUZZY_SETS];
+
 float mapToLux(int analogValue);
 void calculateLightMembership(float luxValue);
 void calculateDistanceMembership(float distanceValue);

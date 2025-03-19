@@ -28,4 +28,4 @@ const uint8_t SEG_ADD[] = {
     SEG_A | SEG_D | SEG_E | SEG_F | SEG_G            
     };
   
-    #endif
+#endif

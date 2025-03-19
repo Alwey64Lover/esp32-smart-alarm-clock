@@ -1,6 +1,8 @@
 {
     "files.associations": {
+        "*.css": "tailwindcss",
         "random": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "set": "cpp"
     }
 }

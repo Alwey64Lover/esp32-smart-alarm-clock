@@ -26,38 +26,87 @@ int fuzzyRules[FUZZY_RULES][FUZZY_SETS] = {
 };
 
 float mapToLux(int analogValue) {
-  return map(analogValue, 4063, 32, 0.1, 100000.0);
+  int in_min = 32;    
+  int in_max = 4063;  
+
+  float out_min = 0.1f;
+  float out_max = 100000.0f;
+
+  return (analogValue - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+
+// Old calculateLightMembership
+// void calculateLightMembership(float lux) {
+//   lightMembership[LIGHT_DARK] = max(0.0f, min(1.0f, (100.0f - lux) / 99.9f));
+//   lightMembership[LIGHT_MEDIUM] = max(0.0f, min(1.0f, (lux - 50.0f) / 4950.0f));
+//   lightMembership[LIGHT_MEDIUM] = min(lightMembership[LIGHT_MEDIUM], (10000.0f - lux) / 5000.0f);
+//   lightMembership[LIGHT_BRIGHT] = max(0.0f, min(1.0f, (lux - 5000.0f) / 95000.0f));
+// }
 
 void calculateLightMembership(float lux) {
-  lightMembership[LIGHT_DARK] = max(0.0f, min(1.0f, (100.0f - lux) / 99.9f));
-  lightMembership[LIGHT_MEDIUM] = max(0.0f, min(1.0f, (lux - 50.0f) / 4950.0f));
-  lightMembership[LIGHT_MEDIUM] = min(lightMembership[LIGHT_MEDIUM], (10000.0f - lux) / 5000.0f);
-  lightMembership[LIGHT_BRIGHT] = max(0.0f, min(1.0f, (lux - 5000.0f) / 95000.0f));
+  const float MAX_LUX = 311.64f;
 
-  //Serial.print("Light Membership - DARK: ");
-  //Serial.print(lightMembership[LIGHT_DARK]);
-  //Serial.print(", MEDIUM: ");
-  //Serial.print(lightMembership[LIGHT_MEDIUM]);
-  //Serial.print(", BRIGHT: ");
-  //Serial.println(lightMembership[LIGHT_BRIGHT]);
+  lightMembership[LIGHT_DARK] = max(0.0f, min(1.0f, (MAX_LUX - lux) / MAX_LUX));
+
+  // LIGHT_MEDIUM: memiliki distribusi membership dalam rentang tertentu
+  // Misalnya, LIGHT_MEDIUM mulai naik ketika lux > 10 dan turun ketika lux > 200
+  float mediumStart = 10.0f;
+  float mediumPeak = 100.0f;
+  float mediumEnd = 200.0f;
+
+  if (lux <= mediumStart || lux >= mediumEnd) {
+      lightMembership[LIGHT_MEDIUM] = 0.0f;
+  } else if (lux <= mediumPeak) {
+      lightMembership[LIGHT_MEDIUM] = (lux - mediumStart) / (mediumPeak - mediumStart);
+  } else {
+      lightMembership[LIGHT_MEDIUM] = (mediumEnd - lux) / (mediumEnd - mediumPeak);
+  }
+
+  // LIGHT_BRIGHT: jika lux > 50 mulai naik, jika lux >= MAX_LUX seharusnya 0
+  float brightStart = 50.0f;
+  if (lux <= brightStart) {
+      lightMembership[LIGHT_BRIGHT] = 0.0f;
+  } else {
+      lightMembership[LIGHT_BRIGHT] = max(0.0f, min(1.0f, (lux - brightStart) / (MAX_LUX - brightStart)));
+  }
 }
+
 
 void calculateDistanceMembership(float distanceValue) {
-  distanceMembership[DISTANCE_NEAR] = max(0.0f, min(1.0f, (100.0f - distanceValue) / 98.0f));
+  const float NO_OBJECT_THRESHOLD = 40.0f;  
+  
+  // Distance Near: (0 - 40 cm)
+  if (distanceValue <= 20.0f) {
+      distanceMembership[DISTANCE_NEAR] = 1.0f;
+  } else if (distanceValue <= 40.0f) {
+      distanceMembership[DISTANCE_NEAR] = (40.0f - distanceValue) / 20.0f;
+  } else {
+      distanceMembership[DISTANCE_NEAR] = 0.0f;
+  }
 
-  distanceMembership[DISTANCE_MEDIUM] = max(0.0f, min(1.0f, (distanceValue - 50.0f) / 100.0f));
-  distanceMembership[DISTANCE_MEDIUM] = min(distanceMembership[DISTANCE_MEDIUM], (250.0f - distanceValue) / 100.0f);
+  // Distance Medium: 40 cm - 110 cm
+  if (distanceValue <= 40.0f || distanceValue >= 110.0f) {
+      distanceMembership[DISTANCE_MEDIUM] = 0.0f;
+  } else if (distanceValue <= 75.0f) {
+      distanceMembership[DISTANCE_MEDIUM] = (distanceValue - 40.0f) / (75.0f - 40.0f);
+  } else {
+      distanceMembership[DISTANCE_MEDIUM] = (110.0f - distanceValue) / (110.0f - 75.0f);
+  }
 
-  distanceMembership[DISTANCE_FAR] = max(0.0f, min(1.0f, (distanceValue - 200.0f) / 200.0f));
+  // Distance Far: If object is beyond 110 cm
+  if (distanceValue >= 150.0f) {
+      distanceMembership[DISTANCE_FAR] = 1.0f;
+  } else if (distanceValue >= 110.0f) {
+      distanceMembership[DISTANCE_FAR] = (distanceValue - 110.0f) / (150.0f - 110.0f);
+  } else {
+      distanceMembership[DISTANCE_FAR] = 0.0f;
+  }
 
-  //Serial.print("Distance Membership - NEAR: ");
-  //Serial.print(distanceMembership[DISTANCE_NEAR]);
-  //Serial.print(", MEDIUM: ");
-  //Serial.print(distanceMembership[DISTANCE_MEDIUM]);
-  //Serial.print(", FAR: ");
-  //Serial.println(distanceMembership[DISTANCE_FAR]);
+  if (distanceValue > NO_OBJECT_THRESHOLD) {
+      distanceMembership[DISTANCE_NEAR] = 0.0f;
+  }
 }
+
 
 int applyFuzzyRules(int motionValue) {
   float actionStrength[FUZZY_SETS] = {0.0f, 0.0f, 0.0f};
@@ -70,16 +119,10 @@ int applyFuzzyRules(int motionValue) {
 
     if (motionValue == motionRule) {
       float strength = min(lightMembership[lightSet], distanceMembership[distanceSet]);
-      actionStrength[actionSet] = max(actionStrength[actionSet], strength);
+      actionStrength[actionSet] += strength;
     }
+    
   }
-
-  //Serial.print("Action Strength - NO_ALARM: ");
-  //Serial.print(actionStrength[NO_ALARM]);
-  //Serial.print(", LOW_ALARM: ");
-  //Serial.print(actionStrength[LOW_ALARM]);
-  //Serial.print(", HIGH_ALARM: ");
-  //Serial.println(actionStrength[HIGH_ALARM]);
 
   float numerator = 0.0f;
   float denominator = 0.0f;
@@ -92,9 +135,5 @@ int applyFuzzyRules(int motionValue) {
   if (denominator == 0) return NO_ALARM;
 
   int action = round(numerator / denominator);
-
-  //Serial.print("Final Action: ");
-  //Serial.println(action);
-
   return action;
 }

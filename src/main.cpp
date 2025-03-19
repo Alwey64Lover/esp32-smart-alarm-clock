@@ -7,6 +7,13 @@
 #define VIRTUAL_PIN_0 V0
 #define VIRTUAL_PIN_1 V1
 #define VIRTUAL_PIN_2 V2
+#define VIRTUAL_PIN_3 V3
+#define VIRTUAL_PIN_4 V4
+#define VIRTUAL_PIN_5 V5
+#define VIRTUAL_PIN_6 V6
+#define VIRTUAL_PIN_7 V7
+#define VIRTUAL_PIN_8 V8
+#define VIRTUAL_PIN_9 V9
 
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
@@ -24,6 +31,7 @@ const float GAMMA = 1.2;
 const float RL10 = 20;
   
 unsigned long lastPrintTime = 0;
+
 
 const uint8_t rows = 4, cols = 4;
 char keys[rows][cols] = {
@@ -93,24 +101,31 @@ void printLocalTime() {
 
     if(!isfinite(lux)) lux = -1;
 
-    Serial.print("analog: ");
-    Serial.println(lightValue);
-    Serial.print("lux: ");
-    Serial.println(lux);
-
+    // Serial.print("analog: ");
+    // Serial.print("lux: ");
+    // Serial.println(lux);
+    
     Blynk.virtualWrite(VIRTUAL_PIN_0,  motionValue);
     Blynk.virtualWrite(VIRTUAL_PIN_1,  lux);
-
+    
+    
     //Serial.print("Motion: ");
     //Serial.print(motionValue);
     //Serial.print(", Light (lux): ");
     //Serial.println(luxValue);
-
+    
     calculateLightMembership(lux);
+    Blynk.virtualWrite(VIRTUAL_PIN_3, lightMembership[LIGHT_DARK]);
+    Blynk.virtualWrite(VIRTUAL_PIN_4, lightMembership[LIGHT_MEDIUM]);
+    Blynk.virtualWrite(VIRTUAL_PIN_5, lightMembership[LIGHT_BRIGHT]);
+
     calculateDistanceMembership(distance_cm);
+    Blynk.virtualWrite(VIRTUAL_PIN_6, distanceMembership[DISTANCE_NEAR]);
+    Blynk.virtualWrite(VIRTUAL_PIN_7, distanceMembership[DISTANCE_MEDIUM]);
+    Blynk.virtualWrite(VIRTUAL_PIN_8, distanceMembership[DISTANCE_FAR]);
 
     int alarmAction = applyFuzzyRules(motionValue);
-
+    Blynk.virtualWrite(V9, alarmAction);
     myAlarm.controlBuzzer(alarmAction);
   }
 
