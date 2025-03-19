@@ -27,5 +27,8 @@ const uint8_t SEG_ADD[] = {
     SEG_C | SEG_E | SEG_G,                           
     SEG_A | SEG_D | SEG_E | SEG_F | SEG_G            
     };
+
+  const float GAMMA = 1.2;
+  const float RL10 = 20;
   
 #endif

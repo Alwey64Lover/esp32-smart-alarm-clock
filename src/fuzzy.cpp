@@ -26,13 +26,16 @@ int fuzzyRules[FUZZY_RULES][FUZZY_SETS] = {
 };
 
 float mapToLux(int analogValue) {
-  int in_min = 32;    
-  int in_max = 4063;  
+  int mappedValue = map(analogValue, 0, 4095, 0, 1023); // convert esp32 12-bit to Arduino 10-bit (for more accurate lux calculation)
+  // Serial.print("map: ");
+  // Serial.println(mappedValue);
+  float voltage = float(mappedValue) / 1024.0 * 5.0;                          //
+  float resistance = 2000.0 * voltage / (1.0 - voltage / 5.0);                // convert read value to lux unit
+  float lux = pow(RL10 * 1e3 * pow(10.0, GAMMA) / resistance, (1.0 / GAMMA)); //
 
-  float out_min = 0.1f;
-  float out_max = 100000.0f;
+  if (!isfinite(lux)) lux=6000; // lux reaches infinite state at around value of 6000
 
-  return (analogValue - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  return lux;
 }
 
 // Old calculateLightMembership

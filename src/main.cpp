@@ -26,9 +26,6 @@ const int pirPin = 19;
 const int ldrPin = 34;  
 const int trigPin = 5;
 const int echoPin = 4;
-
-const float GAMMA = 1.2;
-const float RL10 = 20;
   
 unsigned long lastPrintTime = 0;
 
@@ -94,16 +91,15 @@ void printLocalTime() {
 
     int motionValue = digitalRead(pirPin); 
     int lightValue = analogRead(ldrPin);  
+    int lux = mapToLux(lightValue);
     
-    float voltage = float(lightValue) / 1024.0 * 5.0;
-    float resistance = 2000.0 * voltage / (1.0 - voltage / 5.0);
-    float lux = pow(RL10 * 1e3 * pow(10.0, GAMMA) / resistance, (1.0 / GAMMA));
 
-    if(!isfinite(lux)) lux = -1;
+    // if(!isfinite(lux)) lux = -1;
 
-    // Serial.print("analog: ");
-    // Serial.print("lux: ");
-    // Serial.println(lux);
+    Serial.print("analog: ");
+    Serial.println(lightValue);
+    Serial.print("lux: ");
+    Serial.println(lux);
     
     Blynk.virtualWrite(VIRTUAL_PIN_0,  motionValue);
     Blynk.virtualWrite(VIRTUAL_PIN_1,  lux);
@@ -143,16 +139,16 @@ void setup() {
   pinMode(echoPin, INPUT);
   Serial.begin(115200);
 
-  //Serial.print("Connecting to ");
-  //Serial.println(ssid);
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
   WiFi.begin(ssid, password, 6);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    //Serial.print(".");
+    Serial.print(".");
   }
-  //Serial.println("");
-  //Serial.println("WiFi connected.");
-  //Serial.println(WiFi.localIP());
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println(WiFi.localIP());
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   printLocalTime();
