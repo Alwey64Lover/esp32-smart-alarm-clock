@@ -47,31 +47,35 @@ float mapToLux(int analogValue) {
 // }
 
 void calculateLightMembership(float lux) {
-  const float MAX_LUX = 311.64f;
+  // Distance Near: (0 - 40 cm)
+  if (lux <= 2000.0f) {
+    lightMembership[LIGHT_DARK] = 1.0f;
+} else if (lux > 2000.0f && lux <= 3000.0f) {
+  lightMembership[LIGHT_DARK] = (3000 - lux) / (3000 - 2000);
+} else {
+  lightMembership[LIGHT_DARK] = 0.0f;
+}
 
-  lightMembership[LIGHT_DARK] = max(0.0f, min(1.0f, (MAX_LUX - lux) / MAX_LUX));
+// Distance Medium: 40 cm - 110 cm
+if (lux < 1500.0f || lux > 5000.0f) {
+    lightMembership[LIGHT_MEDIUM] = 0.0f;
+} else if (lux >= 1500.0f && lux <= 3000.0f) {
+  lightMembership[LIGHT_MEDIUM] = (lux - 1500.0f) / (3000.0f - 1500.0f);
+} else if (lux >= 3000 && lux <= 4500) {
+  lightMembership[LIGHT_MEDIUM] = 1;
+}
+else {
+    lightMembership[LIGHT_MEDIUM] = (5000.0f - lux) / (5000.0f - 4500.0f);
+}
 
-  // LIGHT_MEDIUM: memiliki distribusi membership dalam rentang tertentu
-  // Misalnya, LIGHT_MEDIUM mulai naik ketika lux > 10 dan turun ketika lux > 200
-  float mediumStart = 10.0f;
-  float mediumPeak = 100.0f;
-  float mediumEnd = 200.0f;
-
-  if (lux <= mediumStart || lux >= mediumEnd) {
-      lightMembership[LIGHT_MEDIUM] = 0.0f;
-  } else if (lux <= mediumPeak) {
-      lightMembership[LIGHT_MEDIUM] = (lux - mediumStart) / (mediumPeak - mediumStart);
-  } else {
-      lightMembership[LIGHT_MEDIUM] = (mediumEnd - lux) / (mediumEnd - mediumPeak);
-  }
-
-  // LIGHT_BRIGHT: jika lux > 50 mulai naik, jika lux >= MAX_LUX seharusnya 0
-  float brightStart = 50.0f;
-  if (lux <= brightStart) {
-      lightMembership[LIGHT_BRIGHT] = 0.0f;
-  } else {
-      lightMembership[LIGHT_BRIGHT] = max(0.0f, min(1.0f, (lux - brightStart) / (MAX_LUX - brightStart)));
-  }
+// Distance Far: If object is beyond 110 cm
+if (lux < 4000.0f) {
+  lightMembership[LIGHT_BRIGHT] = 0;
+} else if (lux >= 4000.0f && lux <= 5000.0f) {
+    lightMembership[LIGHT_BRIGHT] = (lux - 4000.0f)/(5000.0f-4000.0f);
+} else if (lux >= 5000.0f) {
+  lightMembership[LIGHT_BRIGHT] = 1;
+}
 }
 
 
