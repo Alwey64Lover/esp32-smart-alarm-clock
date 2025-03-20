@@ -76,38 +76,41 @@ void calculateLightMembership(float lux) {
 
 
 void calculateDistanceMembership(float distanceValue) {
-  const float NO_OBJECT_THRESHOLD = 40.0f;  
+  // const float NO_OBJECT_THRESHOLD = 40.0f;  
   
   // Distance Near: (0 - 40 cm)
-  if (distanceValue <= 20.0f) {
+  if (distanceValue <= 120.0f) {
       distanceMembership[DISTANCE_NEAR] = 1.0f;
-  } else if (distanceValue <= 40.0f) {
-      distanceMembership[DISTANCE_NEAR] = (40.0f - distanceValue) / 20.0f;
+  } else if (distanceValue > 120.0f && distanceValue <= 180.0f) {
+      distanceMembership[DISTANCE_NEAR] = (180 - distanceValue) / (180 - 120);
   } else {
       distanceMembership[DISTANCE_NEAR] = 0.0f;
   }
 
   // Distance Medium: 40 cm - 110 cm
-  if (distanceValue <= 40.0f || distanceValue >= 110.0f) {
+  if (distanceValue < 100.0f || distanceValue > 300.0f) {
       distanceMembership[DISTANCE_MEDIUM] = 0.0f;
-  } else if (distanceValue <= 75.0f) {
-      distanceMembership[DISTANCE_MEDIUM] = (distanceValue - 40.0f) / (75.0f - 40.0f);
-  } else {
-      distanceMembership[DISTANCE_MEDIUM] = (110.0f - distanceValue) / (110.0f - 75.0f);
+  } else if (distanceValue >= 100 && distanceValue <= 180.0f) {
+      distanceMembership[DISTANCE_MEDIUM] = (distanceValue - 100.0f) / (180.0f - 100.0f);
+  } else if (distanceValue >= 180 && distanceValue <= 250) {
+    distanceMembership[DISTANCE_MEDIUM] = 1;
+  }
+  else {
+      distanceMembership[DISTANCE_MEDIUM] = (300.0f - distanceValue) / (300.0f - 250.0f);
   }
 
   // Distance Far: If object is beyond 110 cm
-  if (distanceValue >= 150.0f) {
-      distanceMembership[DISTANCE_FAR] = 1.0f;
-  } else if (distanceValue >= 110.0f) {
-      distanceMembership[DISTANCE_FAR] = (distanceValue - 110.0f) / (150.0f - 110.0f);
-  } else {
-      distanceMembership[DISTANCE_FAR] = 0.0f;
+  if (distanceValue < 250.0f) {
+    distanceMembership[DISTANCE_FAR] = 0;
+  } else if (distanceValue >= 250.0f && distanceValue <= 300.0f) {
+      distanceMembership[DISTANCE_FAR] = (distanceValue - 250)/(300-250);
+  } else if (distanceValue >= 350.0f) {
+      distanceMembership[DISTANCE_FAR] = 1;
   }
 
-  if (distanceValue > NO_OBJECT_THRESHOLD) {
-      distanceMembership[DISTANCE_NEAR] = 0.0f;
-  }
+  // if (distanceValue > NO_OBJECT_THRESHOLD) {
+  //     distanceMembership[DISTANCE_NEAR] = 0.0f;
+  // }
 }
 
 

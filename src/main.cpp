@@ -121,7 +121,7 @@ void printLocalTime() {
     Blynk.virtualWrite(VIRTUAL_PIN_8, distanceMembership[DISTANCE_FAR]);
 
     int alarmAction = applyFuzzyRules(motionValue);
-    Blynk.virtualWrite(V9, alarmAction);
+    Blynk.virtualWrite(V9, alarmAction == 0 ? "NO ALARM" : (alarmAction == 1 ? "LOW ALARM" : "HIGH ALARM"));
     myAlarm.controlBuzzer(alarmAction);
   }
 
