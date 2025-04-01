@@ -1,52 +1,48 @@
-#include "MyAlarm.h"
+#include "AlarmManager.h"
 
-MyAlarm::MyAlarm(){
+AlarmManager::AlarmManager(){
     alarm_itr = alarm_set.begin();
     buzzerToggle = false;
 }
 
-void MyAlarm::controlBuzzer(int alarmAction) {
+void AlarmManager::controlBuzzer(int alarmAction) {
     switch (alarmAction) {
       case NO_ALARM:
         digitalWrite(18, LOW); 
-        //Serial.println("NO");
+        Serial.println("NO");
         break;
       case LOW_ALARM:
         digitalWrite(18, HIGH);
         delay(500);
         digitalWrite(18, LOW);
         delay(500);
-        //Serial.println("LOW");
+        Serial.println("LOW");
         break;
       case HIGH_ALARM:
         digitalWrite(18, HIGH);
         delay(100);
         digitalWrite(18, LOW);
         delay(100);
-        //Serial.println("HIGH");
+        Serial.println("HIGH");
         break;
     }
   }
 
-void MyAlarm::setAlarm(int val) {
+void AlarmManager::setAlarm(int val) {
 
     alarm_set.insert(val);
   
-    //Serial.print("MyAlarm set: ");
-    //Serial.println(val);
-  
-    //Serial.print("All alarms: ");
+    Serial.print("All alarms: ");
     for (int i : alarm_set) {
-      //Serial.print(i);
-      //Serial.print(" ");
+      Serial.print(i);
+      Serial.print(" ");
     }
-    //Serial.println();
+    Serial.println();
+
     alarm_itr = alarm_set.begin();
-    //Serial.print("epic: ");
-    //Serial.println(*alarm_itr);
 }
 
-void MyAlarm::deleteAlarm(std::set<int>::iterator itr){
+void AlarmManager::deleteAlarm(std::set<int>::iterator itr){
     alarm_set.erase(itr);
     alarm_itr = alarm_set.begin();
   }

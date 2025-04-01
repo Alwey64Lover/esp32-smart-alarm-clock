@@ -1,17 +1,17 @@
-#ifndef KEYPADCONTROL_H
-#define KEYPADCONTROL_H
+#ifndef KEYPADMANAGER_H
+#define KEYPADMANAGER_H
 
 #include "config.h"
-#include "MyAlarm.h"
+#include "AlarmManager.h"
 
-class KeyPadControl{
+class KeypadManager{
     public:
         int state, valIndex, entered_value;
         Keypad& keypad;
         TM1637Display& display;
-        MyAlarm& alarm;
+        AlarmManager& alarm;
     
-        KeyPadControl(Keypad& keypad, TM1637Display& display, MyAlarm& alarm);
+        KeypadManager(Keypad& keypad, TM1637Display& display, AlarmManager& alarm);
         void nextChar(char key);
         void enterAlarm();
         void turnOffAlarm();

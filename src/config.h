@@ -1,12 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <WiFi.h>
-#include "time.h"
 #include <TM1637Display.h>
 #include <Keypad.h>
-#include <set>
-#include <WebServer.h>
 #include <Arduino.h>
 
 const uint8_t SEG_ADD[] = {

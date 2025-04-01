@@ -21,7 +21,6 @@
 extern float lightMembership[FUZZY_SETS];
 extern float distanceMembership[FUZZY_SETS];
 
-float mapToLux(int analogValue);
 void calculateLightMembership(float luxValue);
 void calculateDistanceMembership(float distanceValue);
 int applyFuzzyRules(int motionValue);

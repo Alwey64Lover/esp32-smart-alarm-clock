@@ -1,6 +1,9 @@
 #include "config.h"
-#include "MyAlarm.h"
-#include "KeyPadControl.h"
+#include "AlarmManager.h"
+#include "KeypadManager.h"
+#include "WifiManager.h"
+#include "SensorManager.h"
+
 #include "blynkCreds.h"
 #include <BlynkSimpleEsp32.h>
 
@@ -15,20 +18,19 @@
 #define VIRTUAL_PIN_8 V8
 #define VIRTUAL_PIN_9 V9
 
-const char* ssid = "Wokwi-GUEST";
-const char* password = "";
+char ssid[] = "Wokwi-GUEST";
+char password[] = "";
 
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 7 * 3600;
-const int   daylightOffset_sec = 0;
+char ntpServer[] = "pool.ntp.org";
+long  gmtOffset_sec = 7 * 3600;
+int   daylightOffset_sec = 0;
 
-const int pirPin = 19;  
-const int ldrPin = 34;  
-const int trigPin = 5;
-const int echoPin = 4;
+int pirPin = 19;  
+int ldrPin = 34;  
+int trigPin = 5;
+int echoPin = 4;
   
 unsigned long lastPrintTime = 0;
-
 
 const uint8_t rows = 4, cols = 4;
 char keys[rows][cols] = {
@@ -44,85 +46,39 @@ uint8_t colPins[cols] = {26, 27, 14, 13};
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 TM1637Display display(16, 17);
 
-MyAlarm myAlarm;
-KeyPadControl keyPadControl(keypad, display, myAlarm);
+WifiManager wifiManager;
+SensorManager sensorManager(pirPin, ldrPin, trigPin, echoPin);
+AlarmManager alarmManager;
+KeypadManager keypadManager(keypad, display, alarmManager);
 
-// WebServer server(80);
+void runAlarm() {
+  int time = wifiManager.getTime();
+  float distance_cm = sensorManager.getDistance();
+  int motionValue = sensorManager.getMotion(); 
+  int lux = sensorManager.getLight();
+  
+  Blynk.virtualWrite(VIRTUAL_PIN_0,  motionValue);
+  Blynk.virtualWrite(VIRTUAL_PIN_1,  lux);
+  Blynk.virtualWrite(VIRTUAL_PIN_2,  distance_cm);
+  
+  calculateLightMembership(lux);
 
-// void handleAlarmTrigger() {
-//   digitalWrite(18, HIGH);  
-//   delay(500);
-//   digitalWrite(18, LOW);
-//   //Serial.println("server connection");
-//   server.send(200, "text/html", "Alarm Triggered");
-// }
+  Blynk.virtualWrite(VIRTUAL_PIN_3, lightMembership[LIGHT_DARK]);
+  Blynk.virtualWrite(VIRTUAL_PIN_4, lightMembership[LIGHT_MEDIUM]);
+  Blynk.virtualWrite(VIRTUAL_PIN_5, lightMembership[LIGHT_BRIGHT]);
 
-void printLocalTime() {
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) {
-    //Serial.println("Failed to obtain time");
-    return;
-  }
+  calculateDistanceMembership(distance_cm);
 
-  int hrs = timeinfo.tm_hour;
-  int mins = timeinfo.tm_min;
-  int time = hrs * 100 + mins;
+  Blynk.virtualWrite(VIRTUAL_PIN_6, distanceMembership[DISTANCE_NEAR]);
+  Blynk.virtualWrite(VIRTUAL_PIN_7, distanceMembership[DISTANCE_MEDIUM]);
+  Blynk.virtualWrite(VIRTUAL_PIN_8, distanceMembership[DISTANCE_FAR]);
 
-  if (myAlarm.alarm_set.find(time) == myAlarm.alarm_set.end()) {
-    // Ultrasonic
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
+  int alarmAction = applyFuzzyRules(motionValue);
 
-    // Read the echo pin
-    long duration = pulseIn(echoPin, HIGH);
+  Blynk.virtualWrite(V9, alarmAction == 0 ? "NO ALARM" : (alarmAction == 1 ? "LOW ALARM" : "HIGH ALARM"));
 
-    // Convert to distance (speed of sound = 343 m/s = 0.0343 cm/µs)
-    float distance_cm = (duration * 0.0343) / 2;
-
-    Blynk.virtualWrite(VIRTUAL_PIN_2,  distance_cm);
-
-    // Print the result
-    //Serial.print("Distance: ");
-    //Serial.print(distance_cm);
-    //Serial.println(" cm");
-
-    int motionValue = digitalRead(pirPin); 
-    int lightValue = analogRead(ldrPin);  
-    int lux = mapToLux(lightValue);
-    
-
-    // if(!isfinite(lux)) lux = -1;
-
-    Serial.print("analog: ");
-    Serial.println(lightValue);
-    Serial.print("lux: ");
-    Serial.println(lux);
-    
-    Blynk.virtualWrite(VIRTUAL_PIN_0,  motionValue);
-    Blynk.virtualWrite(VIRTUAL_PIN_1,  lux);
-    
-    
-    //Serial.print("Motion: ");
-    //Serial.print(motionValue);
-    //Serial.print(", Light (lux): ");
-    //Serial.println(luxValue);
-    
-    calculateLightMembership(lux);
-    Blynk.virtualWrite(VIRTUAL_PIN_3, lightMembership[LIGHT_DARK]);
-    Blynk.virtualWrite(VIRTUAL_PIN_4, lightMembership[LIGHT_MEDIUM]);
-    Blynk.virtualWrite(VIRTUAL_PIN_5, lightMembership[LIGHT_BRIGHT]);
-
-    calculateDistanceMembership(distance_cm);
-    Blynk.virtualWrite(VIRTUAL_PIN_6, distanceMembership[DISTANCE_NEAR]);
-    Blynk.virtualWrite(VIRTUAL_PIN_7, distanceMembership[DISTANCE_MEDIUM]);
-    Blynk.virtualWrite(VIRTUAL_PIN_8, distanceMembership[DISTANCE_FAR]);
-
-    int alarmAction = applyFuzzyRules(motionValue);
-    Blynk.virtualWrite(V9, alarmAction == 0 ? "NO ALARM" : (alarmAction == 1 ? "LOW ALARM" : "HIGH ALARM"));
-    myAlarm.controlBuzzer(alarmAction);
+  if (alarmManager.alarm_set.find(time) != alarmManager.alarm_set.end()) {  
+    alarmManager.controlBuzzer(alarmAction);
   }
 
   display.clear();
@@ -139,19 +95,7 @@ void setup() {
   pinMode(echoPin, INPUT);
   Serial.begin(115200);
 
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password, 6);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println(WiFi.localIP());
-
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  printLocalTime();
+  wifiManager.initWifiConnection(ssid, password, ntpServer, gmtOffset_sec, daylightOffset_sec);
 
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);
 }
@@ -160,20 +104,20 @@ void loop() {
   unsigned long currentMillis = millis();
   
   if (currentMillis - lastPrintTime >= 1000){
-    if (keyPadControl.state == 0){
+    if (keypadManager.state == 0){
         // Run every 1 second
         lastPrintTime = currentMillis;
-        printLocalTime();
+        runAlarm();
       
     }
-    else if (keyPadControl.state == 1){
-      display.showNumberDec(keyPadControl.entered_value / pow(10, 4 - keyPadControl.valIndex));
+    else if (keypadManager.state == 1){
+      display.showNumberDec(keypadManager.entered_value / pow(10, 4 - keypadManager.valIndex));
     }
     else{
-      display.showNumberDec(*myAlarm.alarm_itr);
+      display.showNumberDec(*alarmManager.alarm_itr);
     }
   }
-  keyPadControl.getInput();
+  keypadManager.getInput();
 
   Blynk.run();
   delay(200);
