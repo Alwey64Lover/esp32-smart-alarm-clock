@@ -76,10 +76,15 @@ void runAlarm() {
   int alarmAction = applyFuzzyRules(motionValue);
 
   Blynk.virtualWrite(V9, alarmAction == 0 ? "NO ALARM" : (alarmAction == 1 ? "LOW ALARM" : "HIGH ALARM"));
-
-  if (alarmManager.alarm_set.find(time) != alarmManager.alarm_set.end()) {  
-    alarmManager.controlBuzzer(alarmAction);
-  }
+  
+    if (alarmManager.alarm_set.find(time) != alarmManager.alarm_set.end()) {  
+      if (alarmManager.buzzerToggle){
+        alarmManager.controlBuzzer(alarmAction);
+      }
+    }
+    else{
+      alarmManager.buzzerToggle = true;
+    }
 
   display.clear();
   display.setBrightness(3);
@@ -120,5 +125,5 @@ void loop() {
   keypadManager.getInput();
 
   Blynk.run();
-  delay(200);
+  delay(100);
 }

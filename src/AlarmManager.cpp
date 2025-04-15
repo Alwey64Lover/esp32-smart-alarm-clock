@@ -2,10 +2,11 @@
 
 AlarmManager::AlarmManager(){
     alarm_itr = alarm_set.begin();
-    buzzerToggle = false;
+    buzzerToggle = true;
 }
 
 void AlarmManager::controlBuzzer(int alarmAction) {
+  if (buzzerToggle)
     switch (alarmAction) {
       case NO_ALARM:
         digitalWrite(18, LOW); 
